@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  modsecurity-waf:
+    image: owasp/modsecurity-crs:nginx
+    container_name: modsecurity-waf
+    ports:
+      - "11111:8080"  # CORRECTED: Use 8080 instead of 80
+    environment:
+      - BACKEND=http://dvwa-app:80
+      - MODSEC_RULE_ENGINE=On
+      - MODSEC_AUDIT_ENGINE=On
+      - MODSEC_AUDIT_LOG_PARTS=ABDEFHIJZ
+      - PARANOIA=1
+    volumes:
+      - ./modsec-custom.conf:/etc/modsecurity.d/modsec-custom.conf:ro
+      - ./custom-rules:/etc/modsecurity.d/custom-rules:ro
+    depends_on:
+      - dvwa
+    networks:
+      - waf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa-app
+    ports:
+      - "80:80"
+    environment:
+      - MYSQL_USER=dvwa
+      - MYSQL_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+    networks:
+      - waf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/setup.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  waf-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24
