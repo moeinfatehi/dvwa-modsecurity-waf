@@ -5,7 +5,7 @@ services:
     image: owasp/modsecurity-crs:nginx
     container_name: modsecurity-waf
     ports:
-      - "11111:8080"  # CORRECTED: Use 8080 instead of 80
+      - "8000:8080"  # CORRECTED: Use 8080 instead of 80
     environment:
       - BACKEND=http://dvwa-app:80
       - MODSEC_RULE_ENGINE=On
@@ -50,4 +50,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.20.0.0/24
+        - subnet: 172.100.0.0/24
